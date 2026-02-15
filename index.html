@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Galaxia de Amor Pro</title>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background: radial-gradient(circle at center, #0a001a, #000000);
+    font-family: Arial, sans-serif;
+}
+
+#mensaje{
+    position:absolute;
+    top:15px;
+    width:100%;
+    text-align:center;
+    color:white;
+    font-size:22px;
+    background:rgba(255,255,255,0.08);
+    padding:12px;
+    border-radius:20px;
+    backdrop-filter:blur(8px);
+    z-index:10;
+    letter-spacing:1px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="mensaje">Te Amo Muchote Mi Ojitos Brillantes ♥️</div>
+
+<!-- 🎵 Música local -->
+<audio id="musica-fondo" autoplay loop>
+    <source src="quiet-music.mp3" type="audio/mpeg">
+</audio>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://threejs.org/examples/js/loaders/FontLoader.js"></script>
+<script src="https://threejs.org/examples/js/geometries/TextGeometry.js"></script>
+
+<script>
+let scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0x000010, 50, 1200);
+
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 3000);
+let renderer = new THREE.WebGLRenderer({antialias:true, alpha:true});
+renderer.setPixelRatio(window.devicePixelRatio);
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputEncoding = THREE.sRGBEncoding;
+document.body.appendChild(renderer.domElement);
+
+/* ---------------- LUCES ---------------- */
+
+const ambient = new THREE.AmbientLight(0x5555ff, 1.2);
+scene.add(ambient);
+
+const point = new THREE.PointLight(0xffffff, 2.5, 1000);
+point.position.set(100,150,100);
+scene.add(point);
+
+/* ---------------- ESFERA CENTRAL ---------------- */
+
+const geometrySphere = new THREE.SphereGeometry(12, 128, 128);
+const materialSphere = new THREE.MeshPhysicalMaterial({
+    color: 0xff66ff,
+    emissive: 0x220022,
+    emissiveIntensity: 2,
+    roughness: 0.1,
+    metalness: 0.9,
+    clearcoat: 1,
+    clearcoatRoughness: 0.05
+});
+
+const esfera = new THREE.Mesh(geometrySphere, materialSphere);
+scene.add(esfera);
+
+/* ---------------- FRASES ---------------- */
+
+const frases = [
+"Mi Amor ♥️","Mi Vida ✨","Mi Cielo 🥺","Eres Mi mundo",
+"Mi Princesa 👑","Mi Corazón","Mi Tesoro 💎","Mi Universo 🌌",
+"Te Amo Muchote","Mi Estrellita ⭐","Mi Bonita 👉🏻👈🏻",
+"Mi Infinito ♾️","Mi Sueño 💭","Mi Luz 🌟",
+"Mi Destino 💫","Contigo Todo",
+"Mi Felicidad 🌸","Mi Paz","Mi Todo Bonito 💝",
+"Mi Reina 👑","Mi Casualidad Favorita",
+"Mi Locura 😍","Mi Ángelito","Mi Eternidad"
+];
+
+const grupo = new THREE.Group();
+scene.add(grupo);
+
+const loader = new THREE.FontLoader();
+const textos = [];
+
+loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function(font){
+
+    for(let i=0;i<350;i++){
+
+        const texto = frases[Math.floor(Math.random()*frases.length)];
+
+        const geometry = new THREE.TextGeometry(texto,{
+            font:font,
+            size:1.4,
+            height:0.25,
+            curveSegments:12
+        });
+
+        const material = new THREE.MeshStandardMaterial({
+            color:0xffffff,
+            emissive:0x111111
+        });
+
+        const mesh = new THREE.Mesh(geometry,material);
+
+        const radius = 180 + Math.random()*120;
+        const theta = Math.random()*2*Math.PI;
+        const phi = Math.acos((Math.random()*2)-1);
+
+        mesh.position.set(
+            radius*Math.sin(phi)*Math.cos(theta),
+            radius*Math.sin(phi)*Math.sin(theta),
+            radius*Math.cos(phi)
+        );
+
+        mesh.userData = {
+            speed: 0.0005 + Math.random()*0.001,
+            offset: Math.random()*1000
+        };
+
+        grupo.add(mesh);
+        textos.push(mesh);
+    }
+});
+
+/* ---------------- ESTRELLAS ---------------- */
+
+const starGeometry = new THREE.BufferGeometry();
+const starCount = 8000;
+const positions = [];
+
+for(let i=0;i<starCount;i++){
+    positions.push((Math.random()-0.5)*3000);
+    positions.push((Math.random()-0.5)*3000);
+    positions.push((Math.random()-0.5)*3000);
+}
+
+starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(positions,3));
+const starMaterial = new THREE.PointsMaterial({color:0xffffff,size:1.2});
+const stars = new THREE.Points(starGeometry,starMaterial);
+scene.add(stars);
+
+/* ---------------- CORAZONES ORBITANDO ---------------- */
+
+const heartTexture = new THREE.TextureLoader().load("https://i.imgur.com/Z6X9Z8B.png");
+const heartMaterial = new THREE.SpriteMaterial({map:heartTexture, transparent:true});
+
+const hearts = [];
+
+for(let i=0;i<80;i++){
+    const sprite = new THREE.Sprite(heartMaterial);
+    const r = 80 + Math.random()*200;
+    sprite.userData = {
+        radius:r,
+        angle:Math.random()*Math.PI*2,
+        speed:0.001 + Math.random()*0.002,
+        height:(Math.random()-0.5)*60
+    };
+    sprite.scale.set(6,6,6);
+    scene.add(sprite);
+    hearts.push(sprite);
+}
+
+/* ---------------- CÁMARA ORBITAL ---------------- */
+
+let camAngle = 0;
+let camRadius = 260;
+
+/* ---------------- ANIMACIÓN ---------------- */
+
+let hue = 0;
+
+function animate(){
+    requestAnimationFrame(animate);
+
+    // cámara automática
+    camAngle += 0.0006;
+    camera.position.x = Math.cos(camAngle)*camRadius;
+    camera.position.z = Math.sin(camAngle)*camRadius;
+    camera.position.y = Math.sin(camAngle*0.5)*40;
+    camera.lookAt(0,0,0);
+
+    // esfera viva
+    esfera.rotation.y += 0.002;
+    esfera.rotation.x += 0.001;
+    const pulse = 1 + Math.sin(Date.now()*0.002)*0.08;
+    esfera.scale.set(pulse,pulse,pulse);
+
+    // color dinámico
+    hue += 0.2;
+    materialSphere.emissive = new THREE.Color(`hsl(${hue%360},80%,60%)`);
+
+    // frases flotando
+    grupo.rotation.y += 0.0008;
+    textos.forEach(t=>{
+        t.position.y += Math.sin(Date.now()*t.userData.speed + t.userData.offset)*0.005;
+    });
+
+    // corazones orbitando
+    hearts.forEach(h=>{
+        h.userData.angle += h.userData.speed;
+        h.position.x = Math.cos(h.userData.angle)*h.userData.radius;
+        h.position.z = Math.sin(h.userData.angle)*h.userData.radius;
+        h.position.y = h.userData.height + Math.sin(Date.now()*0.002)*5;
+    });
+
+    renderer.render(scene,camera);
+}
+
+animate();
+
+window.addEventListener("resize",()=>{
+    renderer.setSize(window.innerWidth,window.innerHeight);
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+});
+
+/* ---------------- AUDIO ---------------- */
+const musica = document.getElementById("musica-fondo");
+musica.volume = 0.25;
+</script>
+
+</body>
+</html>
